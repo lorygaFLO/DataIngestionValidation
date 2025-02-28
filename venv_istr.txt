@@ -1,0 +1,7 @@
+cd /c:/Users/Lorenzo/Documents/GitHub/DataIngestion
+New-Alias python "C:\Users\Lorenzo\AppData\Local\Programs\Python\Python312\python.exe"
+python -m venv venvDataIngestion 
+.\venvDataIngestion\Scripts\activate
+
+
+pip freeze > requirements.txt

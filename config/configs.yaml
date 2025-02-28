@@ -1,0 +1,4 @@
+input_folder: /path/to/input/folder
+output_folder: /path/to/output/folder
+use_polars: True
+csv_delimiter: ","
