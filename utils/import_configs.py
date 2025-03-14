@@ -3,36 +3,43 @@ import importlib.util
 import os
 import sys
 
+def load_config(file_path='config/configs.yaml'):
+    if not os.path.isabs(file_path):
+        file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), file_path)
+    
+    with open(file_path, 'r') as file:
+        config = yaml.safe_load(file)
+    
+    return config
 
-def get_main_dir():
-    if getattr(sys, 'frozen', False):
-        # The application is frozen (e.g., running as an executable)
-        main_dir = os.path.dirname(sys.executable)
+def get_config(key, file_path='config/configs.yaml'):
+    config = load_config(file_path)
+    if key in config:
+        return config[key]
     else:
-        # The application is not frozen (e.g., running as a script)
-        main_dir = os.path.dirname(os.path.abspath(__file__))
-    return main_dir
+        raise KeyError(f"The key '{key}' does not exist in the configuration file. Please set the variable.")
 
+def get_registry(file_path='config/registry.yaml'):
+    if not os.path.isabs(file_path):
+        file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), file_path)
+    
+    with open(file_path, 'r') as file:
+        registry = yaml.safe_load(file)
+    
+    return registry
 
-def load_config(config_filename):
-    main_dir = get_main_dir()
-    config_path = os.path.join(main_dir, config_filename)
-    with open(config_path, 'r') as stream:
-        try:
-            return yaml.safe_load(stream)
-        except yaml.YAMLError as exc:
-            print(f"Error loading YAML file: {exc}")
+def get_output_path(file_path='config/configs.yaml'):
+    """
+    Retrieve the output path from the configuration file.
 
+    Args:
+        file_path (str): The path to the configuration file. Defaults to 'config/configs.yaml'.
 
-def import_project_config(config_module_filename):
-    main_dir = get_main_dir()
-    config_module_path = os.path.join(main_dir, config_module_filename)
-    spec = importlib.util.spec_from_file_location("configs", config_module_path)
-    config_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(config_module)
-    return config_module
-
-
-# Load configurations at the start
-yaml_config = load_config('config.yaml')
-project_config = import_project_config('configs.py')
+    Returns:
+        str: The absolute path to the output directory.
+    """
+    config = load_config(file_path)
+    output_path = config.get('output_folder', 'output')
+    if not os.path.isabs(output_path):
+        output_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), output_path)
+    return output_path

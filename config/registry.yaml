@@ -1,0 +1,40 @@
+"*test*":
+  validators:
+    required_columns:
+      - ProductName
+      - Category
+      - Date
+      - Value1
+      - Value2
+      - Value3
+      - IsActive
+      - IntegerField
+    additional_columns:
+      - ProductName
+      - Category
+      - Date
+      - Value1
+      - Value2
+      - Value3
+      - IsActive
+      - IntegerField
+"*bella*":
+  validators:
+    required_columns:
+      - ProductName
+      - Category
+      - Date
+      - Value1
+      - Value2
+      - Value3
+      - IsActive
+      - IntegerField
+    additional_columns:
+      - ProductName
+      - Category
+      - Date
+      - Value1
+      - Value2
+      - Value3
+      - IsActive
+      - IntegerField

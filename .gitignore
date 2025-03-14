@@ -1,8 +1,10 @@
-
-
 # VS Code
 .vscode/
 
+# Python
+**/__pycache__/
+
 input/
 output/
-venvDataIngestion/
+reports/
+venvDataIngestion2/
