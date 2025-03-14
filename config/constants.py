@@ -1,0 +1,1 @@
+BASEPATH = "C:\\Users\\Lorenzo\\Documents\\GitHub\\DataIngestion"

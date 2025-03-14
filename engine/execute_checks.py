@@ -13,6 +13,7 @@ import shutil
 from utils.import_configs import get_registry, get_output_path
 from engine.reporter import Reporter
 from utils.validators import VALIDATORS_DICT
+from config.constants import BASEPATH
 
 class Validator:
     def __init__(self, registry_path=None):
@@ -22,7 +23,7 @@ class Validator:
         Args:
             registry_path (str, optional): Path to the registry file. Defaults to 'config/registry.yaml'.
         """
-        self.registry_path = registry_path if registry_path else os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config', 'registry.yaml')
+        self.registry_path = registry_path if registry_path else os.path.join(BASEPATH, 'config', 'registry.yaml')
         self.registry_data = self.load_registry()
         self.reporter = Reporter()
         self.output_path = get_output_path()
