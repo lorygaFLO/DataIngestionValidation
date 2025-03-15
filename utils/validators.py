@@ -37,6 +37,9 @@ def required_columns(df, columns, messages):
     return True
 
 
+
+
+
 def additional_columns(df, columns, messages):
     """
     Check if there are no additional columns in the dataframe.
@@ -61,7 +64,37 @@ def additional_columns(df, columns, messages):
     
     return True
 
+
+
+
+def is_empty_dataframe(df, messages):
+    """
+    Check if the dataframe is empty.
+
+    Parameters:
+    df (pandas.DataFrame or polars.DataFrame): The dataframe to check.
+    params (dict): Not used in this validator.
+    messages (list): List to store validation messages.
+
+    Returns:
+    bool: True if the dataframe is not empty, False otherwise.
+    """
+
+    if isinstance(df, pd.DataFrame) or isinstance(df, pl.DataFrame):
+        if len(df) == 0:
+            messages.append("The dataframe is empty, cannot proceed with validation.")
+            raise ValueError("The dataframe is empty, cannot proceed with validation.")
+    else:
+        raise TypeError("df must be either a pandas or polars DataFrame")
+    
+    return True
+
+
+
+
+
 VALIDATORS_DICT = {
     "required_columns": required_columns,
-    "additional_columns": additional_columns
+    "additional_columns": additional_columns,
+    "is_empty_dataframe": is_empty_dataframe
 }

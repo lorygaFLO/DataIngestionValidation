@@ -1,5 +1,6 @@
 "*test*":
   validators:
+    is_empty_dataframe: 
     required_columns:
       - ProductName
       - Category
@@ -20,6 +21,7 @@
       - IntegerField
 "*bella*":
   validators:
+    is_empty_dataframe: 
     required_columns:
       - ProductName
       - Category
