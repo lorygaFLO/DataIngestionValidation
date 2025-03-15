@@ -19,24 +19,28 @@
       - Value3
       - IsActive
       - IntegerField
-"*bella*":
-  validators:
-    is_empty_dataframe: 
-    required_columns:
-      - ProductName
-      - Category
-      - Date
-      - Value1
-      - Value2
-      - Value3
-      - IsActive
-      - IntegerField
-    additional_columns:
-      - ProductName
-      - Category
-      - Date
-      - Value1
-      - Value2
-      - Value3
-      - IsActive
-      - IntegerField
+    check_null_values:
+      check_null_values:
+        - Value1
+        - Value2
+        - Value3
+        - IntegerField
+      custom_null_values:
+        - ""
+        - " "
+        - "NA"
+        - "N/A"
+        - "NULL"
+
+    value_range:
+      Value1:
+        min: 0
+        max: 100
+      Value2:
+        min: 0
+      Value3:
+        max: 1000
+      IntegerField:
+        min: 1
+        max: 999
+

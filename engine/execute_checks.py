@@ -13,7 +13,7 @@ import shutil
 from utils.import_configs import get_registry, get_output_path
 from engine.reporter import Reporter
 from utils.validators import VALIDATORS_DICT
-from config.constants import BASEPATH
+from config.system_constants import BASEPATH
 
 class Validator:
     def __init__(self, registry_path=None):
@@ -57,6 +57,11 @@ class Validator:
                 continue  # Skip further validation for this file
             elif matches:
                 matched_files[path] = dataset
+            else:
+                message = f"No validation rules found in registry for file: {path}. The file will not be validated."
+                self.reporter.write_report(path, [message])
+                print(message)
+                
         return matched_files
 
     def save_valid_files(self, path, dataset):
@@ -94,7 +99,13 @@ class Validator:
                     validator_func = VALIDATORS_DICT.get(validator_name)
                     if validator_func:
                         try:
-                            result = validator_func(dataset, params, messages)
+                            
+                            # Handle validators that don't require more than 2 parameters
+                            if validator_name == 'is_empty_dataframe':
+                                result = validator_func(dataset, messages)
+                            else:
+                                result = validator_func(dataset, messages, params)
+
                             if isinstance(result, tuple):
                                 result = result[0]
                             validation_results[validator_name] = result

@@ -2,6 +2,9 @@
 
 This repository provides a simple, practical, and flexible tool for data ingestion and validation. The goal is to ensure that data complies with user-defined rules, providing a detailed report in case of non-compliance.
 
+This project is particularly valuable for individuals organizations that need to regularly validate data consistency from third-party providers. It automates the validation process, ensuring data quality and compliance with predefined standards.
+
+
 ## Project Overview
 
 The Data Ingestion & Validation tool is designed to automate and streamline the process of validating data files against predefined rules. It supports CSV and Parquet files, with the flexibility to extend to other formats in the future.

@@ -1,6 +1,6 @@
 import yaml
 import os
-from config.constants import BASEPATH
+from config.system_constants import BASEPATH
 
 def load_config(file_path='config/configs.yaml'):
     if not os.path.isabs(file_path):
