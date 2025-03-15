@@ -20,7 +20,7 @@
       - IsActive
       - IntegerField
     check_null_values:
-      check_null_values:
+      columns:
         - Value1
         - Value2
         - Value3

@@ -126,6 +126,7 @@ def custom_validator(dataset, messages):
 2. **Register Validator**:
 ```python
 VALIDATORS_DICT = {
+    'another_validator': another_validator,
     'custom_validator': custom_validator
 }
 ```
@@ -187,4 +188,5 @@ Contributions are welcome and greatly appreciated! This project has many opportu
 * **Cloud Integration**: Add support for cloud storage services (AWS S3, Azure Blob, etc.)
 * **Documentation**: Improve guides, add examples, and create tutorials
 * **Error Handling**: Enhance error messages and validation reporting
-* **UI/Dashboard**: Create a web interface for validation monitoring
+* **Partial validation**: why reject all the records incoming from data? we can reject bad records but accept good ones
+* **Cross Validation**: permit validtion between multiple files.
