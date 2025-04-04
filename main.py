@@ -10,7 +10,8 @@ def main():
     matched_files = validator.validate_files(data)
     #print(matched_files)
 
-    print("Process ended...")
+
+    print("Process ended")
 
 if __name__ == "__main__":
     main()

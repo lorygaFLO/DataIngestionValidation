@@ -1,5 +1,6 @@
 input_folder: input
-output_folder: output
+output_folder: validation_output
+validation_reports_folder: validation_reports_folder
 use_polars: False
 csv_delimiter: ","
 

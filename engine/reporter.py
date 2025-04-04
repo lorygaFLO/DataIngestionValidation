@@ -1,7 +1,12 @@
 import os
+from utils.import_configs import get_config
 
 class Reporter:
-    def __init__(self, base_report_path='reports'):
+    def __init__(self, base_report_path=None):
+        if base_report_path is None:
+            base_report_path = get_config('validation_reports_folder')
+            if not os.path.isabs(base_report_path):
+                base_report_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), base_report_path)
         self.base_report_path = base_report_path
         if not os.path.exists(self.base_report_path):
             os.makedirs(self.base_report_path)

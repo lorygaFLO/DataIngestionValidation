@@ -101,7 +101,7 @@ Files in output_path are exact copies of validated files, remaining unmodified f
 
 ### Validator Return Types
 
-All validators must take as input df an messages s a rule and return one of the following:
+All validators must take as input df and messages as a rule and return one of the following:
 * **Boolean**: `True` if validation passes, `False` otherwise
 * **Tuple**: A tuple where:
   - First element is a boolean (`True` if validation passes)
