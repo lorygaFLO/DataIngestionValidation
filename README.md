@@ -66,24 +66,22 @@ Files in output_path are exact copies of validated files, remaining unmodified f
 ```yaml
 "sales_*.csv":                # Pattern matching sales data files
   validators:                  # List of validators to apply
-    column_presence:           # Validator for required columns
-      required_columns:        # List of mandatory columns
-        - "transaction_id"
-        - "product_code"
-        - "quantity"
-        - "unit_price"
-        - "total_amount"
-        - "transaction_date"
-        - "customer_id"
+    required_columns:           # Validator for required columns
+      - "transaction_id"
+      - "product_code"
+      - "quantity"
+      - "unit_price"
+      - "total_amount"
+      - "transaction_date"
+      - "customer_id"
     data_type:                 # Validator for data types
-      column_types:
-        transaction_id: "str"
-        product_code: "str"
-        quantity: "int"
-        unit_price: "float"
-        total_amount: "float"
-        transaction_date: "datetime"
-        customer_id: "str"
+      transaction_id: "str"
+      product_code: "str"
+      quantity: "int"
+      unit_price: "float"
+      total_amount: "float"
+      transaction_date: "datetime"
+      customer_id: "str"
     value_range:               # Validator for numerical constraints
       rules:
         quantity:
