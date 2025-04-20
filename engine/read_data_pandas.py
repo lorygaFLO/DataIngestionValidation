@@ -36,20 +36,11 @@ class DataReader:
         return df
 
     def read_all_files(self):
-        dataframes = {}
+        file_paths = []
         for root, _, files in os.walk(self.folder_path):
             for file_name in files:
                 file_path = os.path.join(root, file_name)
-                if file_name.endswith('.csv'):
-                    if self.use_polars:
-                        dataframes[file_path] = self.read_csv_polars(file_path)
-                    else:
-                        dataframes[file_path] = self.read_csv_pandas(file_path)
-                elif file_name.endswith('.parquet'):
-                    if self.use_polars:
-                        dataframes[file_path] = self.read_parquet_polars(file_path)
-                    else:
-                        dataframes[file_path] = self.read_parquet_pandas(file_path)
-        return dataframes
+                file_paths.append(file_path)
+        return file_paths
 
 

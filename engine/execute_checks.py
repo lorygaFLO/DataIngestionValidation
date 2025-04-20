@@ -37,32 +37,29 @@ class Validator:
         """
         return get_registry(self.registry_path)
 
-    def match_files(self, input_data_dict):
+    def match_file(self, file_path):
         """
-        Match input files to the patterns specified in the registry.
+        Match a file path to the patterns specified in the registry.
 
         Args:
-            input_data_dict (dict): Dictionary of file paths and datasets.
+            file_path (str): Path to the file to match.
 
         Returns:
-            dict: Dictionary of matched files and datasets.
+            str or None: The matched pattern if found, None otherwise.
         """
-        matched_files = {}
-        for path, dataset in input_data_dict.items():
-            matches = [pattern for pattern in self.registry_data.keys() if fnmatch.fnmatch(path, pattern)]
-            if len(matches) > 1:
-                message = f"Multiple matches found for {path}: {matches}. Not possible to univocally identify the validation routine."
-                self.reporter.write_report(path, [message])
-                print(message)
-                continue  # Skip further validation for this file
-            elif matches:
-                matched_files[path] = dataset
-            else:
-                message = f"No validation rules found in registry for file: {path}. The file will not be validated."
-                self.reporter.write_report(path, [message])
-                print(message)
-                
-        return matched_files
+        matches = [pattern for pattern in self.registry_data.keys() if fnmatch.fnmatch(file_path, pattern)]
+        if len(matches) > 1:
+            message = f"Multiple matches found for {file_path}: {matches}. Not possible to univocally identify the validation routine."
+            self.reporter.write_report(file_path, [message])
+            print(message)
+            return None
+        elif matches:
+            return matches[0]
+        else:
+            message = f"No validation rules found in registry for file: {file_path}. The file will not be validated."
+            self.reporter.write_report(file_path, [message])
+            print(message)
+            return None
 
     def save_valid_files(self, path, dataset):
         """
@@ -77,29 +74,51 @@ class Validator:
         shutil.copyfile(path, output_file_path)  # Overwrite if the file exists
         print(f"File compliant saved to {output_file_path}")
 
-    def validate_files(self, input_data_dict):
+    def validate_files(self, file_paths):
         """
         Validate the input files against the registry rules.
 
         Args:
-            input_data_dict (dict): Dictionary of file paths and datasets.
+            file_paths (list): List of file paths to validate.
 
         Returns:
             dict: Dictionary of validation results.
         """
-        matched_files = self.match_files(input_data_dict)
         validation_results = {}
-        for path, dataset in matched_files.items():
+        
+        for path in file_paths:
             print(f"Validating {path}")
             messages = []
-            matched_pattern = [pattern for pattern in self.registry_data.keys() if fnmatch.fnmatch(path, pattern)]
+            
+            # Try to read the file based on its extension
+            try:
+                if path.lower().endswith('.csv'):
+                    from engine.read_data_pandas import DataReader
+                    dataset = DataReader().read_csv_pandas(path)
+                elif path.lower().endswith('.parquet'):
+                    from engine.read_data_pandas import DataReader
+                    dataset = DataReader().read_parquet_pandas(path)
+                else:
+                    message = f"Unsupported file format for {path}. Only CSV and Parquet files are supported."
+                    self.reporter.write_report(path, [message])
+                    print(message)
+                    continue
+            except Exception as e:
+                message = f"Error reading file {path}: {str(e)}"
+                self.reporter.write_report(path, [message])
+                print(message)
+                continue
+                
+            # Match the file to a pattern in the registry
+            matched_pattern = self.match_file(path)
             if matched_pattern:
-                validators = self.registry_data[matched_pattern[0]]['validators']
+                file_validation_results = {}
+                validators = self.registry_data[matched_pattern]['validators']
+                
                 for validator_name, params in validators.items():
                     validator_func = VALIDATORS_DICT.get(validator_name)
                     if validator_func:
                         try:
-                            
                             # Handle validators that don't require more than 2 parameters
                             if validator_name == 'is_empty_dataframe':
                                 result = validator_func(dataset, messages)
@@ -108,7 +127,7 @@ class Validator:
 
                             if isinstance(result, tuple):
                                 result = result[0]
-                            validation_results[validator_name] = result
+                            file_validation_results[validator_name] = result
                         except ValueError as e:
                             messages.append(str(e))
                             self.reporter.write_report(path, messages)
@@ -117,14 +136,21 @@ class Validator:
                         raise ValueError(f"Validator {validator_name} not found")
                 else:
                     messages.append("\n\n------ VALIDATION RESULTS -------\n")
-                    for validator_name, result in validation_results.items():
+                    for validator_name, result in file_validation_results.items():
                         messages.append(f"{validator_name}: {'Passed' if result else 'Failed'}")
-                    if any(not result for result in validation_results.values()):
+                    
+                    # Update the overall validation results
+                    for k, v in file_validation_results.items():
+                        validation_results[k] = v
+                        
+                    if any(not result for result in file_validation_results.values()):
                         self.reporter.write_report(path, messages)
                     else:
                         self.save_valid_files(path, dataset)
             else:
-                messages.append(f"No matching pattern found for {path}")
+                # No matching pattern found - already reported in match_file method
+                pass
+                
         return validation_results
 
 # Usage example
