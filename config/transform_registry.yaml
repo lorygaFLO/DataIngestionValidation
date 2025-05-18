@@ -1,0 +1,28 @@
+"sales_*.csv":
+  transforms:
+    - name: "strings_strip_whitespace"
+      function: "strings_strip_whitespace"
+      params:
+        columns: ["ProductName", "Category"]
+        strip_whitespace: true
+      order: 1
+    - name: "case_transform"
+      function: "case_transform"
+      params:
+        columns: ["product_code", "customer_id"]
+        to_lowercase: true
+        to_uppercase: false
+      order: 2
+    - name: "case_transform"
+      function: "case_transform"
+      params:
+        columns: ["product_code", "customer_id"]
+        to_lowercase: false
+        to_uppercase: true
+      order: 3
+
+"product_mapping*.csv":
+  transforms:
+    - name: "blank"
+      function: "blank"
+      order: 1

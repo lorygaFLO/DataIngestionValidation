@@ -1,21 +1,23 @@
-# Data Ingestion & Validation
+# Data Ingestion, Validation & Transformation
 
-This repository provides a simple, practical, and flexible tool for data ingestion and validation. The goal is to ensure that data complies with user-defined rules, providing a detailed report in case of non-compliance.
+This repository provides a flexible and modular tool for data ingestion, validation, and transformation. The goal is to ensure that data complies with user-defined rules, can be transformed through configurable stages, and provides detailed reporting throughout the process.
 
-This project is particularly valuable for individuals organizations that need to regularly validate data consistency from third-party providers. It automates the validation process, ensuring data quality and compliance with predefined standards.
-
+This project is especially valuable for organizations that need to routinely validate and transform data from third-party sources. It automates the entire data processing pipeline, ensuring data quality and compliance with predefined standards.  
+Additionally, it provides a structured template that simplifies the definition of data transformation and validation processes, making it easier to generate reports, trace operations, and standardize data processing pipelines.
 
 ## Project Overview
 
-The Data Ingestion & Validation tool is designed to automate and streamline the process of validating data files against predefined rules. It supports CSV and Parquet files, with the flexibility to extend to other formats in the future.
+The tool has been updated to support greater modularity and configurability, allowing you to define multi-stage pipelines via YAML configuration files. You can now specify a sequence of validation and transformation stages, each with its own registry, directly in the configuration.
 
 ### Key Features
 
-* **Flexible Validation Rules**: Define custom validation rules through a simple registry configuration
-* **Multiple File Format Support**: Currently handles CSV and Parquet files
-* **Detailed Reporting**: Generates comprehensive validation reports for non-compliant files
-* **Extensible Architecture**: Easy to add new validators and file format support
-* **Non-Destructive Processing**: Original files remain unchanged during validation
+* **Configurable Multi-stage Pipeline**: Define a sequence of validation and transformation stages via YAML
+* **Extensible Validation Rules**: Easily add new custom validators
+* **Modular Transformations**: Implement custom transformations via registry and Python functions
+* **Extended Format Support**: CSV and Parquet, with extensibility for more formats
+* **Detailed Reporting**: Reports generated for each stage and processed file
+* **Plug-in Architecture**: Easily add new validators/transformers
+* **Non-destructive Processing**: Original files are never modified
 
 ## Project Architecture
 
@@ -24,125 +26,112 @@ The Data Ingestion & Validation tool is designed to automate and streamline the 
 ```
 /
 ├── config/                 # Configuration files
-│   ├── configs.yaml       # General configuration
-│   ├── constants.py       # System constants
-│   └── registry.yaml      # Validation rules registry
-├── engine/                # Core processing modules
-│   ├── execute_checks.py  # Validation execution
-│   ├── read_data_pandas.py# Data reading utilities
-│   └── reporter.py        # Reporting functionality
-└── utils/                 # Utility functions
-    ├── import_configs.py  # Configuration management
-    └── validators.py      # Validation functions
+│   ├── configs.yaml        # General configuration
+│   ├── constants.py        # System constants
+│   ├── validation_registry.yaml      # Validation rules registry
+│   └── transform_registry.yaml       # Transformation rules registry
+├── engine/                 # Core processing modules
+│   ├── execute_checks.py   # Validation execution
+│   ├── execute_transforms.py # Transformation execution
+│   ├── read_data_pandas.py # Data reading utilities
+│   └── reporter.py         # Reporting functionality
+└── utils/                  # Utility functions
+    ├── import_configs.py   # Configuration management
+    ├── validators.py       # Validation functions
+    └── transformers.py     # Transformation functions
 ```
 
-### Validation Process Flow
+### Processing Flow
 
 1. **Data Discovery**: The system scans the input directory for supported file formats
-2. **Data Loading**: Files are loaded using appropriate readers (Pandas for CSV/Parquet)
-3. **Rule Matching**: Files are matched against patterns in the registry
-4. **Validation**: Each file undergoes validation against defined rules
-5. **Result Processing**:
-   * Compliant files are copied to the output directory
-   * Non-compliant files generate detailed validation reports
+2. **Data Loading**: Files are loaded using the appropriate readers (Pandas for CSV/Parquet)
+3. **Stage Processing**: Files go through the configured pipeline stages:
+   * **Validation Stages**: Validation according to rules defined in the registry
+   * **Transformation Stages**: Transformation according to rules defined in the registry
+4. **Result Processing**:
+   * Successfully processed files are copied to the output directory (structure replicated)
+   * Detailed reports are generated for each stage and file
 
 ## Configuration Guide
 
 ### General Configuration (configs.yaml)
 
 ```yaml
-input_path: "data/input"      # Directory containing files to validate
-output_path: "data/output"    # Directory for validated files (maintains input directory structure)
-report_path: "data/reports"   # Directory for validation reports (maintains input directory structure)
-
-# Note: The directory structure from input_path will be replicated in both output_path and report_path.
-# Files in output_path are exact copies of validated files, remaining unmodified from their original state.
+use_polars: False
+csv_delimiter: ","  
 ```
-Note: The directory structure from input_path will be replicated in both output_path and report_path.
-Files in output_path are exact copies of validated files, remaining unmodified from their original state.
 
-### Registry Configuration (registry.yaml)
+### Registry Configuration Examples
 
+#### Validation Registry (validation_registry.yaml)
 ```yaml
-"sales_*.csv":                # Pattern matching sales data files
-  validators:                  # List of validators to apply
-    required_columns:           # Validator for required columns
+"sales_*.csv":                
+  validators:                  
+    required_columns:          
       - "transaction_id"
       - "product_code"
-      - "quantity"
-      - "unit_price"
-      - "total_amount"
-      - "transaction_date"
-      - "customer_id"
-    data_type:                 # Validator for data types
+      # ... other columns ...
+    data_type:                
       transaction_id: "str"
       product_code: "str"
-      quantity: "int"
-      unit_price: "float"
-      total_amount: "float"
-      transaction_date: "datetime"
-      customer_id: "str"
-    value_range:               # Validator for numerical constraints
-      rules:
-        quantity:
-          min: 1
-          max: 1000
-        unit_price:
-          min: 0.01
-        total_amount:
-          min: 0.01
-    date_format:               # Validator for date formatting
-      transaction_date: "%Y-%m-%d"
+      # ... other validations ...
 ```
 
-## Validator Implementation Guide
+#### Transformation Registry (transform_registry.yaml)
+```yaml
+"sales_*.csv":
+  transformers:
+    column_rename:
+      transaction_id: "id"
+      product_code: "sku"
+    date_format:
+      transaction_date: "%Y-%m-%d"
+    derived_columns:
+      profit:
+        formula: "total_amount - (quantity * unit_cost)"
+```
 
-### Validator Return Types
+## Implementation Guide
 
-All validators must take as input df and messages as a rule and return one of the following:
-* **Boolean**: `True` if validation passes, `False` otherwise
-* **Tuple**: A tuple where:
-  - First element is a boolean (`True` if validation passes)
-  - Subsequent elements can contain additional validation information
+### Creating Custom Components
 
-Furthrermore all validators must be inserted in VALIDATORS_DICT dictionary.
+To add a custom validator or transformer, simply implement the function and register it in the respective dictionary (`VALIDATORS_DICT` or `TRANSFORMERS_DICT`).
 
-### Creating Custom Validators
-
-1. **Define Validator Function**:
+#### Custom Validator
 ```python
 def custom_validator(dataset, messages):
     """Custom validation function
     Args:
-        dataset: pandas DataFrame to validate (mandatory)
-        messages: list to store validation messages (mandatory)
+        dataset: pandas DataFrame to validate
+        messages: list for validation messages
     """
-    # Implement validation logic
+    # custom logic
     return True
+
+VALIDATORS_DICT['custom_validator'] = custom_validator
 ```
 
-2. **Register Validator**:
+#### Custom Transformer
 ```python
-VALIDATORS_DICT = {
-    'another_validator': another_validator,
-    'custom_validator': custom_validator
-}
+def custom_transformer(dataset, config):
+    """Custom transformation function
+    Args:
+        dataset: pandas DataFrame to transform
+        config: transformation configuration
+    """
+    # custom logic
+    return transformed_dataset
+
+TRANSFORMERS_DICT['custom_transformer'] = custom_transformer
 ```
-
-### Standard Validator Parameters
-
-* `dataset`: Pandas DataFrame containing the data to validate
-* `messages`: List for storing validation messages
 
 ## Usage Examples
 
 ### Basic Usage
-The validation must be run from main.py file. 
-
 ```python
 from engine.execute_checks import Validator
 
-# Initialize validator
+# Initialize the validator
 validator = Validator()
 
 # Prepare input data
@@ -154,37 +143,41 @@ input_data = {
 results = validator.validate_files(input_data)
 ```
 
-### Adding Custom Validation Rules
-
-1. Create validator function in `validators.py`
-2. Add to registry.yaml:
+### Custom Stage Configuration
 ```yaml
-"data/*.csv":
-  validators:
-    custom_validator:
-      param1: value1
-      param2: value2
+stages:
+  - type: "validation"
+    registry: "initial_checks.yaml"
+  - type: "transformation"
+    registry: "data_prep.yaml"
+  - type: "transformation"
+    registry: "business_logic.yaml"
+  - type: "validation"
+    registry: "final_checks.yaml"
 ```
 
 ## Future Enhancements
 
 * Support for additional file formats (JSON, XML, etc.)
-* Integration with cloud storage services (Azure Blob, AWS S3)
-* Database connectivity for validation against reference data
-* Real-time validation monitoring and alerts
-* REST API for remote validation requests
+* Integration with cloud storage services
+* Database connectivity for validation/transformation against reference data
+* Real-time monitoring and alerts
+* REST API for remote processing requests
+* Parallel processing of multiple files
+* Conditional stage execution
+* Dynamic transformation rules
+* Enhanced error recovery and retry mechanisms
 
 ## Contributing
 
-Contributions are welcome and greatly appreciated! This project has many opportunities for enhancement to make it more practical and customizable. Here are some areas where you can contribute:
+Contributions are welcome! Here are some areas where you can contribute:
 
-### Areas for Contribution
-
-* **New File Format Support**: Add support for JSON, XML, Excel, or other data formats
-* **Additional Validators**: Implement new validation rules and checks
+* **New File Format Support**: Add support for additional data formats
+* **Additional Validators/Transformers**: Implement new validation rules and transformation functions
 * **Performance Optimization**: Improve processing speed for large datasets
-* **Cloud Integration**: Add support for cloud storage services (AWS S3, Azure Blob, etc.)
-* **Documentation**: Improve guides, add examples, and create tutorials
-* **Error Handling**: Enhance error messages and validation reporting
-* **Partial validation**: why reject all the records incoming from data? we can reject bad records but accept good ones
-* **Cross Validation**: permit validtion between multiple files.
+* **Cloud Integration**: Add support for cloud storage services
+* **Documentation**: Improve guides and examples
+* **Error Handling**: Enhance error messages and reporting
+* **Partial Processing**: Implement partial success/failure handling
+* **Cross-file Operations**: Enable validation/transformation across multiple files
+* **Pipeline Optimization**: Add support for parallel processing and conditional execution

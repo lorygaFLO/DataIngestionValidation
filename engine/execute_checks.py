@@ -1,164 +1,131 @@
 """
 Validator Class:
-- The Validator class is responsible for validating datasets against a set of predefined rules specified in the registry.
-- It uses a registry file (default: 'config/registry.yaml') to determine which validators to apply to each dataset.
-- The output path for compliant files can be specified in 'config/configs.yaml' or defaults to 'output'.
-- Validation results and error messages are logged using the Reporter class.
-- Compliant files are saved to the output directory, and validation reports are generated for non-compliant files.
+- Uses DataHandler for file operations and pattern matching
+- Validates datasets against predefined rules specified in the registry
+- Generates validation reports and saves compliant files
 """
 
-import fnmatch
 import os
 import shutil
-from utils.import_configs import get_registry, get_output_path
-from engine.reporter import Reporter
 from utils.validators import VALIDATORS_DICT
-from config.system_constants import BASEPATH
+from engine.data_handler import DataHandler
+from engine.reporter import Reporter
+from typing import Dict, Any, Optional, List
 
 class Validator:
-    def __init__(self, registry_path=None):
+    def __init__(self, registry_path: str, report_path: str, input_folder_path: str, output_folder_path: str):
         """
         Initialize the Validator class.
 
         Args:
-            registry_path (str, optional): Path to the registry file. Defaults to 'config/registry.yaml'.
+            registry_path (str): Path to the registry file
+            report_path (str): Path to store validation reports
+            input_folder_path (str): Path to input folder
+            output_folder_path (str): Path to output folder
+
+        Raises:
+            ValueError: If required paths are not provided
         """
-        self.registry_path = registry_path if registry_path else os.path.join(BASEPATH, 'config', 'registry.yaml')
-        self.registry_data = self.load_registry()
-        self.reporter = Reporter()
-        self.output_path = get_output_path()
+        self.handler = DataHandler(registry_path, input_folder_path, output_folder_path)
+        self.output_folder_path = output_folder_path
+        self.reporter = Reporter(report_path)
 
-    def load_registry(self):
-        """
-        Load the registry data from the specified registry file.
-
-        Returns:
-            dict: The registry data.
-        """
-        return get_registry(self.registry_path)
-
-    def match_file(self, file_path):
-        """
-        Match a file path to the patterns specified in the registry.
-
-        Args:
-            file_path (str): Path to the file to match.
-
-        Returns:
-            str or None: The matched pattern if found, None otherwise.
-        """
-        matches = [pattern for pattern in self.registry_data.keys() if fnmatch.fnmatch(file_path, pattern)]
-        if len(matches) > 1:
-            message = f"Multiple matches found for {file_path}: {matches}. Not possible to univocally identify the validation routine."
-            self.reporter.write_report(file_path, [message])
-            print(message)
-            return None
-        elif matches:
-            return matches[0]
-        else:
-            message = f"No validation rules found in registry for file: {file_path}. The file will not be validated."
-            self.reporter.write_report(file_path, [message])
-            print(message)
-            return None
-
-    def save_valid_files(self, path, dataset):
+    def save_valid_files(self, path: str, dataset) -> None:
         """
         Save valid files to the output directory.
 
         Args:
-            path (str): Path to the input file.
-            dataset: The dataset to save.
+            path (str): Path to the input file
+            dataset: The dataset to save
         """
-        output_file_path = os.path.join(self.output_path, os.path.relpath(path, start=os.path.dirname(self.output_path)))
-        os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
-        shutil.copyfile(path, output_file_path)  # Overwrite if the file exists
+        base_name = os.path.basename(path)
+        output_file_path = os.path.join(self.output_folder_path, base_name)
+        os.makedirs(self.output_folder_path, exist_ok=True)
+        shutil.copyfile(path, output_file_path)
         print(f"File compliant saved to {output_file_path}")
 
-    def validate_files(self, file_paths):
+    def _execute_validator(self, validator_func, dataset: Any, messages: List[str], params: Optional[Dict] = None) -> bool:
+        """
+        Execute a validator function with appropriate parameters.
+
+        Args:
+            validator_func: The validator function to execute
+            dataset: The dataset to validate
+            messages: List to store validation messages
+            params: Optional parameters for the validator
+
+        Returns:
+            bool: Validation result
+        """
+        try:
+            if params is None:
+                result = validator_func(dataset, messages)
+            else:
+                result = validator_func(dataset, messages, params)
+
+            return result[0] if isinstance(result, tuple) else result
+        except Exception as e:
+            messages.append(str(e))
+            return False
+
+    def validate_files(self, file_paths=None) -> Dict[str, bool]:
         """
         Validate the input files against the registry rules.
 
         Args:
-            file_paths (list): List of file paths to validate.
+            file_paths (list, optional): List of file paths to validate.
+                                       If None, processes all files in input folder.
 
         Returns:
-            dict: Dictionary of validation results.
+            dict: Dictionary of validation results
         """
+        to_process_files, error_files = self.handler.to_process_files(file_paths)
         validation_results = {}
         
-        for path in file_paths:
-            print(f"Validating {path}")
+        for file_path, (dataset, pattern) in to_process_files.items():
+            print(f"Validating {file_path}")
             messages = []
             
-            # Try to read the file based on its extension
-            try:
-                if path.lower().endswith('.csv'):
-                    from engine.read_data_pandas import DataReader
-                    dataset = DataReader().read_csv_pandas(path)
-                elif path.lower().endswith('.parquet'):
-                    from engine.read_data_pandas import DataReader
-                    dataset = DataReader().read_parquet_pandas(path)
-                else:
-                    message = f"Unsupported file format for {path}. Only CSV and Parquet files are supported."
-                    self.reporter.write_report(path, [message])
-                    print(message)
-                    continue
-            except Exception as e:
-                message = f"Error reading file {path}: {str(e)}"
-                self.reporter.write_report(path, [message])
-                print(message)
-                continue
-                
-            # Match the file to a pattern in the registry
-            matched_pattern = self.match_file(path)
-            if matched_pattern:
-                file_validation_results = {}
-                validators = self.registry_data[matched_pattern]['validators']
-                
-                for validator_name, params in validators.items():
-                    validator_func = VALIDATORS_DICT.get(validator_name)
-                    if validator_func:
-                        try:
-                            # Handle validators that don't require more than 2 parameters
-                            if validator_name == 'is_empty_dataframe':
-                                result = validator_func(dataset, messages)
-                            else:
-                                result = validator_func(dataset, messages, params)
+            file_validation_results = {}
+            validators = self.handler.registry[pattern]['validators']
+            
+            for validator_name, params in validators.items():
+                validator_func = VALIDATORS_DICT.get(validator_name)
+                if not validator_func:
+                    raise ValueError(f"Validator {validator_name} not found")
 
-                            if isinstance(result, tuple):
-                                result = result[0]
-                            file_validation_results[validator_name] = result
-                        except ValueError as e:
-                            messages.append(str(e))
-                            self.reporter.write_report(path, messages)
-                            break  # Stop further validation for this file
-                    else:
-                        raise ValueError(f"Validator {validator_name} not found")
-                else:
-                    messages.append("\n\n------ VALIDATION RESULTS -------\n")
-                    for validator_name, result in file_validation_results.items():
-                        messages.append(f"{validator_name}: {'Passed' if result else 'Failed'}")
+                result = self._execute_validator(validator_func, dataset, messages, params)
+                if result is False:  # Validation failed
+                    self.reporter.write_report(file_path, messages)
+                    break
+                
+                file_validation_results[validator_name] = result
+            else:  # All validations passed for this file
+                messages.append("\n\n------ VALIDATION RESULTS -------\n")
+                for validator_name, result in file_validation_results.items():
+                    messages.append(f"{validator_name}: {'Passed' if result else 'Failed'}")
+                
+                validation_results.update(file_validation_results)
                     
-                    # Update the overall validation results
-                    for k, v in file_validation_results.items():
-                        validation_results[k] = v
-                        
-                    if any(not result for result in file_validation_results.values()):
-                        self.reporter.write_report(path, messages)
-                    else:
-                        self.save_valid_files(path, dataset)
-            else:
-                # No matching pattern found - already reported in match_file method
-                pass
+                # Save to output ONLY if all validations passed
+                if all(result for result in file_validation_results.values()):
+                    self.save_valid_files(file_path, dataset)
+                else:
+                    self.reporter.write_report(file_path, messages)
                 
         return validation_results
 
 # Usage example
 if __name__ == "__main__":
-    validator = Validator()
+    validator = Validator(
+        r'c:\Users\Lorenzo\Documents\GitHub\DataIngestion\config\registry.yaml',
+        r'c:\Users\Lorenzo\Documents\GitHub\DataIngestion\reports\validation_reports.txt',
+        r'c:\Users\Lorenzo\Documents\GitHub\DataIngestion\data',
+        r'c:\Users\Lorenzo\Documents\GitHub\DataIngestion\output'
+    )
     input_data_dict = {
         r'c:\Users\Lorenzo\Documents\GitHub\DataIngestion\data\test1.csv': 'dataset1',
         r'c:\Users\Lorenzo\Documents\GitHub\DataIngestion\data\test2.csv': 'dataset2'
     }
-    validation_results = validator.validate_files(input_data_dict)
+    validation_results = validator.validate_files(list(input_data_dict.keys()))
     print(validation_results)

@@ -2,18 +2,32 @@ import os
 from utils.import_configs import get_config
 
 class Reporter:
-    def __init__(self, base_report_path=None):
+    def __init__(self, base_report_path):
+        """
+        Initialize the Reporter with a mandatory report path.
+
+        Args:
+            base_report_path (str): Path where reports will be saved. 
+                                  Can be absolute or relative to the project root.
+
+        Raises:
+            ValueError: If base_report_path is not provided
+        """
         if base_report_path is None:
-            base_report_path = get_config('validation_reports_folder')
-            if not os.path.isabs(base_report_path):
-                base_report_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), base_report_path)
+            raise ValueError("base_report_path must be provided")
+
+        # Convert relative path to absolute if needed
+        if not os.path.isabs(base_report_path):
+            base_report_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), base_report_path) #or BASEPATH
+        
         self.base_report_path = base_report_path
         if not os.path.exists(self.base_report_path):
             os.makedirs(self.base_report_path)
 
     def _create_report_path(self, input_file_path):
-        relative_path = os.path.relpath(input_file_path, start=os.path.dirname(self.base_report_path))
-        report_path = os.path.join(self.base_report_path, relative_path)
+        # Get just the filename if it's an absolute path
+        input_filename = os.path.basename(input_file_path)
+        report_path = os.path.join(self.base_report_path, input_filename)
         os.makedirs(os.path.dirname(report_path), exist_ok=True)
         return os.path.splitext(report_path)[0]  # Remove the file extension
 
@@ -26,7 +40,7 @@ class Reporter:
                 report_file.write(message + '\n')
         print(f"Report written to {report_path}")
 
-# Usage example
+# Example usage with relative paths
 if __name__ == "__main__":
-    reporter = Reporter()
-    reporter.write_report(r'c:\Users\Lorenzo\Documents\GitHub\DataIngestion\data\test1.csv', ["Validation passed", "All required columns are present"])
+    reporter = Reporter('reports/validation_reports')
+    reporter.write_report('data/input/test1.csv', ["Validation passed", "All required columns are present"])

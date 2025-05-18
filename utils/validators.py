@@ -2,6 +2,7 @@ import pandas as pd
 import polars as pl
 import numpy as np
 import re
+from typing import List
 
 
 def always_true_validator(df, messages, params=None):

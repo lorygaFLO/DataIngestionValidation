@@ -1,4 +1,4 @@
-"*test*":
+"*sales*":
   validators:
     is_empty_dataframe: 
     required_columns:
