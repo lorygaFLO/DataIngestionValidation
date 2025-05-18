@@ -143,18 +143,6 @@ input_data = {
 results = validator.validate_files(input_data)
 ```
 
-### Custom Stage Configuration
-```yaml
-stages:
-  - type: "validation"
-    registry: "initial_checks.yaml"
-  - type: "transformation"
-    registry: "data_prep.yaml"
-  - type: "transformation"
-    registry: "business_logic.yaml"
-  - type: "validation"
-    registry: "final_checks.yaml"
-```
 
 ## Future Enhancements
 
