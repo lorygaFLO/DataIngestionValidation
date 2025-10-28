@@ -101,6 +101,7 @@ class DataTransformer:
                     if transformer_func:
                         modified_data = transformer_func(
                             modified_data, 
+                            messages=messages,
                             **transform["params"]
                         )
                         status_msg = f"Transform '{transform['name']}' completed successfully"

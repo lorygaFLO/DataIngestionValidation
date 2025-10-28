@@ -1,6 +1,6 @@
 import pandas as pd
 import polars as pl
-from typing import Union, List
+from typing import Union, List, LiteralString
 
 
 
@@ -8,12 +8,14 @@ def strings_strip_whitespace(
     df: Union[pd.DataFrame, pl.DataFrame], 
     columns: List[str], 
     strip_whitespace: bool = True, 
+    messages: str = None ,
 ) -> Union[pd.DataFrame, pl.DataFrame]:
     """
     Clean string columns by applying various transformations.
     
     Parameters:
     df: Input DataFrame
+    messages: string with messages to print
     columns: List of column names containing strings
     strip_whitespace: Whether to strip leading/trailing whitespace
     
@@ -38,6 +40,7 @@ def strings_strip_whitespace(
                 if strip_whitespace:
                     expr = expr.str.strip_chars()
 
+    messages.append(f"{strings_strip_whitespace.__name__}: string columns {columns} transformed.")
     
     return result_df
 
@@ -47,7 +50,8 @@ def case_transform(
     df: Union[pd.DataFrame, pl.DataFrame], 
     columns: List[str], 
     to_uppercase: bool = False,
-    to_lowercase: bool = False
+    to_lowercase: bool = False,
+    messages: str = None
 ) -> Union[pd.DataFrame, pl.DataFrame]:
     """
     Transform string columns to upper or lower case.
@@ -89,9 +93,11 @@ def case_transform(
                     expr = expr.str.to_lowercase()
                 result_df = result_df.with_columns(expr.alias(col))
     
+    messages.append(f"{case_transform.__name__}: string columns {columns} transformed.")
+
     return result_df
 
-def blank(df: Union[pd.DataFrame, pl.DataFrame]) -> Union[pd.DataFrame, pl.DataFrame]:
+def blank(df: Union[pd.DataFrame, pl.DataFrame], messages: str = None) -> Union[pd.DataFrame, pl.DataFrame]:
     """
     Transform string columns to upper or lower case.
     
@@ -107,6 +113,8 @@ def blank(df: Union[pd.DataFrame, pl.DataFrame]) -> Union[pd.DataFrame, pl.DataF
 
     result_df = df.copy()
     
+    messages.append(f"{blank.__name__} No operation has been correctly made.")
+
     return result_df
 
 
