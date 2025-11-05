@@ -4,8 +4,9 @@
 # Python
 **/__pycache__/
 
-input/
-output/
-reports/
-validation_reports/
+data/input/
+data/delivery/
+data/reports/
+data/staging/
+
 venvDataIngestion2/

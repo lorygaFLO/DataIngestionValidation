@@ -12,6 +12,7 @@ from typing import Dict, Any, Literal
 from utils.transformers import TRANSFORMERS_DICT
 from engine.data_handler import DataHandler
 from engine.reporter import Reporter
+from config.settings import *
 
 class DataTransformer:
     def __init__(self, registry_path: str, report_path: str, input_folder_path: str, output_folder_path: str):
@@ -24,11 +25,13 @@ class DataTransformer:
             input_folder_path (str): Path to input folder
             output_folder_path (str): Path to output folder
         """
+        self.S = get_settings()
+
         self.handler = DataHandler(registry_path, input_folder_path, output_folder_path)
-        self.output_folder_path = output_folder_path
+        self.output_folder_path = os.path.join(self.S.PATH_STAGING_RUN, output_folder_path)
         self.reporter = Reporter(report_path)
 
-    def save_transformed_file(self, data: Any, original_path: str, output_format: Literal['csv', 'parquet'] = 'parquet') -> str:
+    def save_transformed_file(self, data: Any, original_path: str) -> str:
         """
         Save transformed data to a file in the specified format.
 
@@ -43,12 +46,10 @@ class DataTransformer:
         Raises:
             ValueError: If output_format is not 'csv' or 'parquet'
         """
-        if output_format not in ['csv', 'parquet']:
-            raise ValueError("output_format must be either 'csv' or 'parquet'")
 
         # Create output filename with new extension
         original_filename = os.path.splitext(os.path.basename(original_path))[0]
-        output_filename = f"{original_filename}.{output_format}"
+        output_filename = f"{original_filename}.{self.S.OUTPUT_FORMAT}"
         output_path = os.path.join(self.output_folder_path, output_filename)
 
         # Create output directory if it doesn't exist
@@ -56,7 +57,7 @@ class DataTransformer:
 
         # Save file in specified format
         try:
-            if output_format == 'csv':
+            if self.S.OUTPUT_FORMAT == 'csv':
                 data.to_csv(output_path, index=False)
             else:  # parquet
                 data.to_parquet(output_path, index=False)
@@ -131,7 +132,7 @@ class DataTransformer:
             # Save transformed file if all transformations were successful
             if not any(log["status"] == "failed" for log in transform_log):
                 try:
-                    output_path = self.save_transformed_file(modified_data, file_path, output_format)
+                    output_path = self.save_transformed_file(modified_data, file_path)
                     messages.append(f"\nTransformed file saved to: {output_path}")
                 except Exception as e:
                     error_msg = f"Error saving transformed file: {str(e)}"

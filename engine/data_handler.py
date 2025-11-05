@@ -10,8 +10,8 @@ import os
 import fnmatch
 import pandas as pd
 from typing import Dict, List, Tuple, Optional
-from utils.import_configs import get_registry, get_config
-
+from utils.import_configs import get_registry
+from config.settings import *
 class DataHandler:
     def __init__(self, registry_path: str, input_folder_path: str, output_folder_path: str):
         """
@@ -33,12 +33,23 @@ class DataHandler:
         
         if output_folder_path is None:
             raise ValueError("output_folder_path must be provided")
-            
+        
+        self.S = get_settings()
+
+
         self.registry_path = registry_path
         self.registry = get_registry(registry_path)
-        self.input_folder_path = input_folder_path
-        self.output_folder_path = output_folder_path
-        self.delimiter = get_config('csv_delimiter')
+        
+        if os.path.basename(self.S.PATH_INPUT).endswith(input_folder_path):
+            self.input_folder_path = os.path.join(self.S.DATAPATH, input_folder_path)
+        else:
+            self.input_folder_path = os.path.join(self.S.PATH_STAGING_RUN, input_folder_path)
+        if os.path.basename(self.S.PATH_DELIVERY).endswith(output_folder_path):
+            self.output_folder_path =self.S.PATH_DELIVERY_RUN
+        else:
+            self.output_folder_path = os.path.join(self.S.DATAPATH, output_folder_path)
+        
+        self.delimiter = self.S.CSV_DELIMITER
 
     def match_file(self, file_path: str) -> Tuple[Optional[str], Optional[str]]:
         """
