@@ -15,17 +15,20 @@ def main():
 
     # Initialize components with relative paths
     transformer = DataTransformer(
-        registry_path='config/transform_registry.yaml',
+        name='1_trasform',
+        registry_path='config/1_transform_registry.yaml',
         report_path='transform_reports',
         input_folder_path=S.INPUT,
-        output_folder_path='transformed'
+        #output_folder_path='transformed'
     )
 
+
     validator = Validator(
-        registry_path='config/validation_registry.yaml',
+        name='2_validation',
+        registry_path='config/2_validation_registry.yaml',
         report_path='validation_reports',
-        input_folder_path='transformed',  # Validate transformed files
-        output_folder_path='delivery'
+        input_folder_path='1_trasform',  # Validate transformed files
+        output_folder_path=S.DELIVERY
     )
 
     # First transform all files

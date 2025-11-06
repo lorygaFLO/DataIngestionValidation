@@ -15,7 +15,7 @@ from config.settings import *
 
 
 class Validator:
-    def __init__(self, registry_path: str, report_path: str, input_folder_path: str, output_folder_path: str):
+    def __init__(self, name:str, registry_path: str, report_path: str, input_folder_path: str, output_folder_path: str = None):
         """
         Initialize the Validator class.
 
@@ -29,6 +29,15 @@ class Validator:
             ValueError: If required paths are not provided
         """
         self.S = get_settings()
+        
+        if name == None:
+            raise ValueError("Step name must be provided. In this way you can identify the step in the logs")
+        
+        self.name = name
+
+        if output_folder_path is None:
+            output_folder_path = name
+            
         self.handler = DataHandler(registry_path, input_folder_path, output_folder_path)
         self.reporter = Reporter(report_path)
 

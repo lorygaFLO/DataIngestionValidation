@@ -15,7 +15,7 @@ from engine.reporter import Reporter
 from config.settings import *
 
 class DataTransformer:
-    def __init__(self, registry_path: str, report_path: str, input_folder_path: str, output_folder_path: str):
+    def __init__(self, name: str, registry_path: str, report_path: str, input_folder_path: str, output_folder_path: str = None):
         """
         Initialize the DataTransformer.
 
@@ -26,6 +26,13 @@ class DataTransformer:
             output_folder_path (str): Path to output folder
         """
         self.S = get_settings()
+
+        if name == None:
+            raise ValueError("Step name must be provided. In this way you can identify the step in the logs")
+        
+        self.name = name
+        if output_folder_path is None:
+            output_folder_path = name
 
         self.handler = DataHandler(registry_path, input_folder_path, output_folder_path)
         self.output_folder_path = os.path.join(self.S.PATH_STAGING_RUN, output_folder_path)
