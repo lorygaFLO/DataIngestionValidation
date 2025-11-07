@@ -73,7 +73,7 @@ class SETTINGS:
         # Folders from .env (logical names)
         input_folder = _as_str(os.getenv("INPUT"), "input")
         staging_folder = _as_str(os.getenv("STAGING"), "staging")
-        delivery_folder = _as_str(os.getenv("DELIVERY"), "output")
+        delivery_folder = _as_str(os.getenv("DELIVERY"), "delivery")
         reports_folder = _as_str(os.getenv("REPORTS"), "reports")
         backups_folder = _as_str(os.getenv("BACKUP"), "backup")
 
