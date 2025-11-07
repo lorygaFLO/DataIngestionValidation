@@ -35,8 +35,7 @@ class Validator:
         
         self.name = name
 
-        if output_folder_path is None:
-            output_folder_path = name
+        self.output_folder_path = output_folder_path or name  # Default to step name
             
         self.handler = DataHandler(registry_path, input_folder_path, output_folder_path)
         self.reporter = Reporter(report_path)
@@ -79,7 +78,7 @@ class Validator:
             messages.append(str(e))
             return False
 
-    def validate_files(self, file_paths=None) -> Dict[str, bool]:
+    def execute(self, file_paths=None) -> Dict[str, bool]:
         """
         Validate the input files against the registry rules.
 

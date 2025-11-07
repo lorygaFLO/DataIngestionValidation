@@ -31,8 +31,7 @@ class DataTransformer:
             raise ValueError("Step name must be provided. In this way you can identify the step in the logs")
         
         self.name = name
-        if output_folder_path is None:
-            output_folder_path = name
+        self.output_folder_path = output_folder_path or name  # Default to step name
 
         self.handler = DataHandler(registry_path, input_folder_path, output_folder_path)
         self.output_folder_path = os.path.join(self.S.PATH_STAGING_RUN, output_folder_path)
@@ -72,7 +71,7 @@ class DataTransformer:
         except Exception as e:
             raise RuntimeError(f"Error saving transformed file: {str(e)}")
 
-    def transform_files(self, file_paths=None, output_format: Literal['csv', 'parquet'] = 'parquet') -> Dict[str, Dict[str, Any]]:
+    def execute(self, file_paths=None, output_format: Literal['csv', 'parquet'] = 'parquet') -> Dict[str, Dict[str, Any]]:
         """
         Transform files according to the rules in the registry.
 
@@ -160,4 +159,4 @@ class DataTransformer:
                 messages.insert(0, f"\n------ TRANSFORMATION RESULTS for {file_path} -------\n")
                 self.reporter.write_report(file_path, messages)
 
-        return transformation_results 
+        return transformation_results
