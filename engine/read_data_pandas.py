@@ -1,22 +1,15 @@
-from utils.import_configs import get_config
 import pandas as pd
 import polars as pl
 import os
+from config.settings import *
 
 
 class DataReader:
     def __init__(self, folder_path=None, use_polars=None, delimiter=None):
-        if folder_path is None:
-            folder_path = get_config('input_folder')
-            if not os.path.isabs(folder_path):
-                folder_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), folder_path)
-        if use_polars is None:
-            use_polars = get_config('use_polars')
-        if delimiter is None:
-            delimiter = get_config('csv_delimiter')
-        self.folder_path = folder_path
-        self.use_polars = use_polars
-        self.delimiter = delimiter
+        
+        self.S = get_settings()
+        self.folder_path = folder_path or self.S.PATH_INPUT
+        self.delimiter = self.S.CSV_DELIMITER if delimiter is None else delimiter
 
 
     def read_csv_pandas(self, file_path):

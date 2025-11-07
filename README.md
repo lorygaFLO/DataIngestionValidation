@@ -2,7 +2,7 @@
 
 This repository provides a flexible and modular tool for data ingestion, validation, and transformation. The goal is to ensure that data complies with user-defined rules, can be transformed through configurable stages, and provides detailed reporting throughout the process.
 
-This project is especially valuable for organizations that need to routinely validate and transform data from third-party sources. It automates the entire data processing pipeline, ensuring data quality and compliance with predefined standards.  
+This project is especially valuable for organizations and individuals that need to routinely validate and transform data from third-party sources. It automates the entire data processing pipeline, ensuring data quality and compliance with predefined standards.  
 Additionally, it provides a structured template that simplifies the definition of data transformation and validation processes, making it easier to generate reports, trace operations, and standardize data processing pipelines.
 
 ## Project Overview
@@ -56,10 +56,8 @@ The tool has been updated to support greater modularity and configurability, all
 
 ### General Configuration (configs.yaml)
 
-```yaml
-use_polars: False
-csv_delimiter: ","  
-```
+Before proceeding, ensure you rename `example.env` to `.env` and configure it with the appropriate settings for your environment.
+
 
 ### Registry Configuration Examples
 
@@ -98,6 +96,11 @@ csv_delimiter: ","
 To add a custom validator or transformer, simply implement the function and register it in the respective dictionary (`VALIDATORS_DICT` or `TRANSFORMERS_DICT`).
 
 #### Custom Validator
+
+The user can specify all the validators he wants but is necessary to follow some rules. 
+- the validator must take the parameters df as input and messages. the users can then insert all the parameters he wants
+- the validator must return a boolean indicating the passed (True) or not passed (False) test 
+
 ```python
 def custom_validator(dataset, messages):
     """Custom validation function
@@ -106,12 +109,17 @@ def custom_validator(dataset, messages):
         messages: list for validation messages
     """
     # custom logic
+    messages.append("custom message")
     return True
 
 VALIDATORS_DICT['custom_validator'] = custom_validator
 ```
+At th end of the validators.py file there is the VALIDATORS_DICT dictionary. The validator must be added to the dictionary or the routine will not recognize the function.
 
 #### Custom Transformer
+
+Any custom trasformer must take df and messages parameters as input. The user can add all the additional parameters he wants.
+
 ```python
 def custom_transformer(dataset, config):
     """Custom transformation function
@@ -120,41 +128,17 @@ def custom_transformer(dataset, config):
         config: transformation configuration
     """
     # custom logic
+    messages.append("custom message")
     return transformed_dataset
 
 TRANSFORMERS_DICT['custom_transformer'] = custom_transformer
 ```
+At th end of the trasformers.py file there is the TRANSFORMERS_DICT dictionary. The trasformer must be added to the dictionary or the routine will not recognize the function.
 
 ## Usage Examples
 
 ### Basic Usage
-```python
-from engine.execute_checks import Validator
-
-# Initialize the validator
-validator = Validator()
-
-# Prepare input data
-input_data = {
-    'data/input/sample.csv': pd.read_csv('data/input/sample.csv')
-}
-
-# Run validation
-results = validator.validate_files(input_data)
-```
-
-
-## Future Enhancements
-
-* Support for additional file formats (JSON, XML, etc.)
-* Integration with cloud storage services
-* Database connectivity for validation/transformation against reference data
-* Real-time monitoring and alerts
-* REST API for remote processing requests
-* Parallel processing of multiple files
-* Conditional stage execution
-* Dynamic transformation rules
-* Enhanced error recovery and retry mechanisms
+to do
 
 ## Contributing
 

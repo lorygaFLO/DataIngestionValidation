@@ -11,9 +11,11 @@ from utils.validators import VALIDATORS_DICT
 from engine.data_handler import DataHandler
 from engine.reporter import Reporter
 from typing import Dict, Any, Optional, List
+from config.settings import *
+
 
 class Validator:
-    def __init__(self, registry_path: str, report_path: str, input_folder_path: str, output_folder_path: str):
+    def __init__(self, name:str, registry_path: str, report_path: str, input_folder_path: str, output_folder_path: str = None):
         """
         Initialize the Validator class.
 
@@ -26,8 +28,17 @@ class Validator:
         Raises:
             ValueError: If required paths are not provided
         """
+        self.S = get_settings()
+        
+        if name == None:
+            raise ValueError("Step name must be provided. In this way you can identify the step in the logs")
+        
+        self.name = name
+
+        if output_folder_path is None:
+            output_folder_path = name
+            
         self.handler = DataHandler(registry_path, input_folder_path, output_folder_path)
-        self.output_folder_path = output_folder_path
         self.reporter = Reporter(report_path)
 
     def save_valid_files(self, path: str, dataset) -> None:
@@ -39,8 +50,8 @@ class Validator:
             dataset: The dataset to save
         """
         base_name = os.path.basename(path)
-        output_file_path = os.path.join(self.output_folder_path, base_name)
-        os.makedirs(self.output_folder_path, exist_ok=True)
+        output_file_path = os.path.join(self.handler.output_folder_path, base_name)
+        os.makedirs(self.handler.output_folder_path, exist_ok=True)
         shutil.copyfile(path, output_file_path)
         print(f"File compliant saved to {output_file_path}")
 

@@ -1,6 +1,6 @@
 import pandas as pd
 import polars as pl
-from typing import Union, List, LiteralString
+from typing import Union, List
 
 
 
