@@ -30,7 +30,7 @@ class Reporter:
 
     def write_report(self, input_file_path, messages):
 
-        if not messages or all("Passed" in message for message in messages) or not self.S.GENERATE_REPORTS:
+        if not messages or all("Passed" in message for message in messages) or self.S.DISABLE_REPORTS:
             return
         
         report_path = self._create_report_path(input_file_path) + '.txt'

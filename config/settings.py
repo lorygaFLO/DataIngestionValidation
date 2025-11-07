@@ -89,7 +89,7 @@ class SETTINGS:
 
         # IO options
         self.USE_POLARS = _as_bool(os.getenv("USE_POLARS"), default=True)
-        self.GENERATE_REPORTS = _as_bool(os.getenv("GENERATE_REPORTS"), default=False)
+        self.DISABLE_REPORTS = _as_bool(os.getenv("DISABLE_REPORTS"), default=False)
         self.CSV_DELIMITER = _as_str(os.getenv("CSV_DELIMITER"), ";")
         self.OUTPUT_FORMAT = (_as_str(os.getenv("OUTPUT_FORMAT"), "parquet") or "parquet").lower()
         if self.OUTPUT_FORMAT not in {"csv", "parquet"}:
